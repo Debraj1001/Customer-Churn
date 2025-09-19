@@ -250,7 +250,8 @@ def preprocess(df):
 st.subheader('User Input')
 styled_input_df = input_df.T.reset_index()
 styled_input_df.columns = ['Feature', 'Value']
-st.dataframe(styled_input_df, hide_index=True, use_container_width=True)
+styled_input_df['Value'] = styled_input_df['Value'].astype(str)
+st.dataframe(styled_input_df, hide_index=True)
 
 if st.button('Predict'):
     processed_df = preprocess(input_df)
