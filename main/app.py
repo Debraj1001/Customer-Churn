@@ -1,20 +1,6 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
-import pickle
-import os
-
-script_dir = os.path.dirname(os.path.abspath(__file__))
-
-model_path = os.path.join(script_dir, 'model.pkl')
-scaler_path = os.path.join(script_dir, 'scaler.pkl')
-
-
-with open(model_path, 'rb') as f:
-    model = pickle.load(f)
-
-with open(scaler_path, 'rb') as f:
-    scaler = pickle.load(f)
+from backend import preprocess_and_predict
 
 st.markdown("<h1 style='text-align: center; color: #FF4B4B;'>Customer Churn Prediction</h1>", unsafe_allow_html=True)
 
@@ -227,26 +213,6 @@ def user_input_features():
 
 input_df = user_input_features()
 
-def preprocess(df):
-    categorical_cols = df.select_dtypes(include=['object']).columns
-    df_encoded = pd.get_dummies(df, columns=categorical_cols, drop_first=True)
-
-    with open(model_path, 'rb') as f:
-        model = pickle.load(f)
-    
-    train_cols = model.feature_names_in_
-    
-    for col in train_cols:
-        if col not in df_encoded.columns:
-            df_encoded[col] = 0
-            
-    df_encoded = df_encoded[train_cols]
-
-    numerical_cols = ['tenure', 'MonthlyCharges', 'TotalCharges']
-    df_encoded[numerical_cols] = scaler.transform(df_encoded[numerical_cols])
-    
-    return df_encoded
-
 st.subheader('User Input')
 styled_input_df = input_df.T.reset_index()
 styled_input_df.columns = ['Feature', 'Value']
@@ -254,9 +220,7 @@ styled_input_df['Value'] = styled_input_df['Value'].astype(str)
 st.dataframe(styled_input_df, hide_index=True)
 
 if st.button('Predict'):
-    processed_df = preprocess(input_df)
-    prediction = model.predict(processed_df)
-    prediction_proba = model.predict_proba(processed_df)
+    prediction, prediction_proba = preprocess_and_predict(input_df)
 
     st.subheader('Prediction')
     with st.spinner('Calculating prediction...'):
